@@ -1,0 +1,21 @@
+{
+  "name": "meijiang-tree-museum",
+  "version": "1.0.0",
+  "private": true,
+  "description": "梅江古树博物馆 - 含账号系统、古树管理、图片上传、访问统计的后端服务",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.3.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1"
+  }
+}

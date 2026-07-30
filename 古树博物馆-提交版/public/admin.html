@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>古树博物馆 · 后台管理</title>
+<style>
+:root{
+  --color-primary:#253926; --color-secondary:#00390A; --color-light:#B5CAA0;
+  --font-num:'Times New Roman','Songti SC','SimSun',serif;
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:var(--font-num);background:#f4f6f2;color:#222;}
+header{background:var(--color-primary);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:12px;}
+header h1{font-size:1.1rem;margin:0;flex:1;}
+button{font-family:var(--font-num);cursor:pointer;border:none;border-radius:6px;padding:8px 14px;background:var(--color-secondary);color:#fff;font-size:.86rem;}
+button.ghost{background:transparent;border:1px solid rgba(255,255,255,.6);}
+button.danger{background:#a33;}
+input,select,textarea{font-family:var(--font-num);padding:7px 9px;border:1px solid #ccc;border-radius:6px;width:100%;font-size:.86rem;}
+label{display:block;font-size:.8rem;margin:8px 0 3px;color:#444;}
+.wrap{max-width:1100px;margin:18px auto;padding:0 16px;}
+.card{background:#fff;border-radius:12px;padding:16px 18px;box-shadow:0 2px 10px rgba(0,0,0,.06);margin-bottom:16px;}
+.row{display:flex;gap:14px;flex-wrap:wrap;}
+.row>div{flex:1;min-width:170px;}
+.hidden{display:none!important;}
+table{width:100%;border-collapse:collapse;font-size:.82rem;}
+th,td{border:1px solid #e3e7df;padding:6px 8px;text-align:left;}
+th{background:#eef2ea;}
+.tree-item{cursor:pointer;}
+.tree-item:hover{background:#f3f7ef;}
+.gallery img{width:42px;height:42px;object-fit:cover;border-radius:6px;margin-right:4px;}
+.notice{font-size:.84rem;color:#666;}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 18px;border-radius:8px;opacity:0;transition:.3s;pointer-events:none;z-index:99;}
+.toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<header>
+  <h1>🌳 古树博物馆 · 后台管理</h1>
+  <span id="userBox"></span>
+</header>
+
+<div class="wrap" id="loginView">
+  <div class="card" style="max-width:380px;margin:40px auto;">
+    <h2>管理员登录</h2>
+    <label>用户名</label><input id="username" value="admin">
+    <label>密码</label><input id="password" type="password" value="admin123">
+    <div style="margin-top:14px;"><button id="loginBtn">登录</button></div>
+    <p class="notice">默认账号 admin / admin123（首次登录请修改密码）</p>
+  </div>
+</div>
+
+<div class="wrap hidden" id="mainView">
+  <div class="card">
+    <div class="row">
+      <div><strong>统计概览</strong><div id="statsBox" class="notice">加载中…</div></div>
+      <div style="flex:0 0 auto;display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
+        <button class="ghost" id="addBtn">+ 新增古树</button>
+        <button class="ghost" id="msgBtn">查看留言</button>
+        <button class="ghost" id="pwdBtn">修改密码</button>
+        <button class="ghost" id="logoutBtn">退出</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>古树列表（点击编辑）</h3>
+    <div id="treeTableBox"><p class="notice">加载中…</p></div>
+  </div>
+
+  <div class="card hidden" id="editCard">
+    <h3 id="editTitle">编辑古树</h3>
+    <form id="treeForm" onsubmit="return false;">
+      <input type="hidden" id="f_id">
+      <div class="row">
+        <div><label>名称 name</label><input id="f_name"></div>
+        <div><label>别名 otherName</label><input id="f_otherName"></div>
+        <div><label>拉丁名 latinName</label><input id="f_latinName"></div>
+      </div>
+      <div class="row">
+        <div><label>科 family</label><input id="f_family"></div>
+        <div><label>属 genus</label><input id="f_genus"></div>
+        <div><label>等级 level</label><input id="f_level"></div>
+      </div>
+      <div class="row">
+        <div><label>树龄 age</label><input id="f_age"></div>
+        <div><label>估算树龄 estimateAge</label><input id="f_estimateAge" type="number"></div>
+        <div><label>位置 location</label><input id="f_location"></div>
+      </div>
+      <div class="row">
+        <div><label>纬度 lat</label><input id="f_lat" type="number" step="any"></div>
+        <div><label>经度 lng</label><input id="f_lng" type="number" step="any"></div>
+        <div><label>管理单位 manageUnit</label><input id="f_manageUnit"></div>
+      </div>
+      <div class="row">
+        <div><label>树高 height</label><input id="f_height"></div>
+        <div><label>胸径 dbh</label><input id="f_dbh"></div>
+        <div><label>冠幅 canopy</label><input id="f_canopy"></div>
+      </div>
+      <label>特征 feature</label><input id="f_feature">
+      <label>复壮措施 protectionMeasures</label><input id="f_protectionMeasures">
+      <label>养护 maintenance</label><input id="f_maintenance">
+      <label>描述 description</label><textarea id="f_description" rows="3"></textarea>
+      <label>封面图 image（URL 或 /uploads/...）</label><input id="f_image">
+      <label>相册 gallery（JSON 数组，如 ["/uploads/a.jpg"]）</label><input id="f_gallery">
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+        <button id="saveBtn" type="button">保存</button>
+        <button class="danger" id="delBtn" type="button">删除</button>
+        <button class="ghost" id="cancelBtn" type="button">取消</button>
+      </div>
+    </form>
+    <hr style="margin:16px 0;border:none;border-top:1px dashed #ccc;">
+    <h4>上传实拍图（自动加入相册）</h4>
+    <input type="file" id="uploadFile" accept="image/*">
+    <button id="uploadBtn" type="button" style="margin-top:8px;">上传并关联本树</button>
+    <div id="uploadMsg" class="notice"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script>
+const $ = (id) => document.getElementById(id);
+const API = (p, opt) => fetch('/api' + p, opt);
+let TOKEN = localStorage.getItem('museum_token') || '';
+let ME = null;
+let editingId = null;
+
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+function authHeader(){ return { 'Content-Type':'application/json', ...(TOKEN?{Authorization:'Bearer '+TOKEN}:{}) }; }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function parseGallery(s){ try{ const a=JSON.parse(s); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
+
+async function login(){
+  const r = await API('/auth/login', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({username:$('username').value, password:$('password').value})});
+  const d = await r.json();
+  if(!r.ok){ toast(d.error||'登录失败'); return; }
+  TOKEN = d.token; ME = d.user; localStorage.setItem('museum_token', TOKEN);
+  enterMain();
+}
+function logout(){ TOKEN=''; ME=null; localStorage.removeItem('museum_token'); $('mainView').classList.add('hidden'); $('loginView').classList.remove('hidden'); }
+
+async function enterMain(){
+  $('loginView').classList.add('hidden'); $('mainView').classList.remove('hidden');
+  $('userBox').textContent = ME ? (ME.username + '（' + ME.role + '）') : '';
+  const canWrite = ME && (ME.role==='admin' || ME.role==='editor');
+  $('addBtn').style.display = canWrite ? '' : 'none';
+  loadStats(); loadTrees();
+}
+
+async function loadStats(){
+  try{
+    const r = await API('/stats', {headers:authHeader()});
+    const d = await r.json();
+    if(r.ok){ $('statsBox').innerHTML = '古树 ' + d.treeCount + ' 棵 · 总访问 ' + d.totalVisits + ' · 今日 ' + d.todayVisits + ' · UV ' + d.uv + ' · 留言 ' + d.messageCount; }
+    else $('statsBox').textContent = d.error || '统计加载失败';
+  }catch(e){ $('statsBox').textContent='统计加载失败'; }
+}
+
+async function loadTrees(){
+  const r = await API('/trees');
+  const d = await r.json();
+  if(!r.ok){ $('treeTableBox').textContent = d.error||'加载失败'; return; }
+  const rows = d.trees.map(t => '<tr class="tree-item" data-id="'+t.id+'"><td>'+t.id+'</td><td>'+esc(t.name)+'</td><td>'+esc(t.family)+'</td><td>'+esc(t.genus)+'</td><td>'+esc(t.location)+'</td><td class="gallery">'+((t.gallery&&t.gallery.length)?t.gallery.slice(0,3).map(g=>'<img src="'+g+'" onerror="this.style.display=\'none\'">').join(''):'')+'</td></tr>').join('');
+  $('treeTableBox').innerHTML = '<table><thead><tr><th>ID</th><th>名称</th><th>科</th><th>属</th><th>位置</th><th>图</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  document.querySelectorAll('.tree-item').forEach(el=>el.onclick=()=>editTree(el.dataset.id));
+}
+
+function editTree(id){
+  editingId = id;
+  API('/trees/'+id).then(r=>r.json()).then(t=>{
+    if(!t.id && t.error){ toast(t.error); return; }
+    $('editTitle').textContent = '编辑古树 #'+t.id;
+    const f = {f_id:'id',f_name:'name',f_otherName:'otherName',f_latinName:'latinName',f_family:'family',f_genus:'genus',f_level:'level',f_age:'age',f_estimateAge:'estimateAge',f_location:'location',f_lat:'lat',f_lng:'lng',f_manageUnit:'manageUnit',f_height:'height',f_dbh:'dbh',f_canopy:'canopy',f_feature:'feature',f_protectionMeasures:'protectionMeasures',f_maintenance:'maintenance',f_description:'description',f_image:'image'};
+    for(const k in f){ $(k).value = t[f[k]]==null?'':t[f[k]]; }
+    $('f_gallery').value = JSON.stringify(t.gallery||[]);
+    $('editCard').classList.remove('hidden');
+    $('delBtn').style.display = (ME && ME.role==='admin') ? '' : 'none';
+    window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'});
+  });
+}
+
+function newTree(){
+  editingId = null;
+  $('editTitle').textContent='新增古树';
+  ['f_id','f_name','f_otherName','f_latinName','f_family','f_genus','f_level','f_age','f_estimateAge','f_location','f_lat','f_lng','f_manageUnit','f_height','f_dbh','f_canopy','f_feature','f_protectionMeasures','f_maintenance','f_description','f_image','f_gallery'].forEach(id=>$(id).value='');
+  $('editCard').classList.remove('hidden');
+  $('delBtn').style.display='none';
+  $('uploadMsg').textContent='';
+  window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'});
+}
+
+async function saveTree(){
+  const b = {
+    name:$('f_name').value, otherName:$('f_otherName').value, latinName:$('f_latinName').value,
+    family:$('f_family').value, genus:$('f_genus').value, level:$('f_level').value, age:$('f_age').value,
+    estimateAge: $('f_estimateAge').value? Number($('f_estimateAge').value):null, location:$('f_location').value,
+    lat: $('f_lat').value!==''? Number($('f_lat').value):null, lng: $('f_lng').value!==''? Number($('f_lng').value):null,
+    manageUnit:$('f_manageUnit').value, height:$('f_height').value, dbh:$('f_dbh').value, canopy:$('f_canopy').value,
+    feature:$('f_feature').value, protectionMeasures:$('f_protectionMeasures').value, maintenance:$('f_maintenance').value,
+    description:$('f_description').value, image:$('f_image').value, gallery: parseGallery($('f_gallery').value)
+  };
+  const opt = {method: editingId?'PUT':'POST', headers:authHeader(), body:JSON.stringify(b)};
+  const url = editingId? '/trees/'+editingId : '/trees';
+  const r = await API(url, opt);
+  const d = await r.json();
+  if(r.ok){ toast('已保存'); $('editCard').classList.add('hidden'); loadTrees(); }
+  else toast(d.error||'保存失败');
+}
+
+async function delTree(){
+  if(!editingId) return;
+  if(!confirm('确认删除该古树？')) return;
+  const r = await API('/trees/'+editingId, {method:'DELETE', headers:authHeader()});
+  const d = await r.json();
+  if(r.ok){ toast('已删除'); $('editCard').classList.add('hidden'); loadTrees(); }
+  else toast(d.error||'删除失败');
+}
+
+async function uploadImg(){
+  if(!editingId){ toast('请先保存古树再上传'); return; }
+  const file = $('uploadFile').files[0];
+  if(!file){ toast('请选择文件'); return; }
+  const fd = new FormData();
+  fd.append('file', file); fd.append('treeId', editingId);
+  const r = await fetch('/api/upload', {method:'POST', headers:{Authorization:'Bearer '+TOKEN}, body:fd});
+  const d = await r.json();
+  if(r.ok){ toast('上传成功'); $('uploadMsg').textContent='已添加: '+d.url; const g=parseGallery($('f_gallery').value); g.push(d.url); $('f_gallery').value=JSON.stringify(g); }
+  else toast(d.error||'上传失败');
+}
+
+async function changePwd(){
+  const oldP = prompt('原密码'); if(!oldP) return;
+  const newP = prompt('新密码（至少6位）'); if(!newP) return;
+  const r = await API('/auth/password', {method:'POST', headers:authHeader(), body:JSON.stringify({oldPassword:oldP, newPassword:newP})});
+  const d = await r.json(); toast(d.ok?'密码已修改':(d.error||'失败'));
+}
+
+async function showMessages(){
+  const r = await API('/stats/messages'); const d = await r.json();
+  if(Array.isArray(d)){ toast('留言 '+d.length+' 条（见控制台）'); console.table(d); }
+  else toast(d.error||'失败');
+}
+
+$('loginBtn').onclick=login;
+$('logoutBtn').onclick=logout;
+$('addBtn').onclick=newTree;
+$('saveBtn').onclick=saveTree;
+$('delBtn').onclick=delTree;
+$('cancelBtn').onclick=()=>$('editCard').classList.add('hidden');
+$('uploadBtn').onclick=uploadImg;
+$('pwdBtn').onclick=changePwd;
+$('msgBtn').onclick=showMessages;
+
+if(TOKEN){
+  API('/auth/me',{headers:authHeader()}).then(r=>r.json()).then(u=>{ if(u && u.id){ ME=u; enterMain(); } else { localStorage.removeItem('museum_token'); } }).catch(()=>localStorage.removeItem('museum_token'));
+}
+</script>
+</body></html>
