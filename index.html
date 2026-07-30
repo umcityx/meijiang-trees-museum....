@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>梅州客家古树名木的数字生态与人文记忆库</title>
+  <meta name="description" content="收录梅州地区古树名木的详细信息，包括树种、树龄、地理位置、保护措施以及客家文化关联故事。">
+
+  <!-- 外部依赖 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+  <!-- 项目样式 -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ======================== 页头 ======================== -->
+  <header>
+    <div class="container header-content">
+      <div class="logo">
+        <i class="fas fa-tree"></i>
+        <span>梅州客家古树名木的数字生态与人文记忆库</span>
+      </div>
+      <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="菜单" aria-expanded="false">
+        <i class="fas fa-bars"></i>
+      </button>
+      <nav id="mainNav" aria-label="主导航">
+        <ul>
+          <li><a href="#home" class="active">首页</a></li>
+          <li><a href="#explore">古树探索</a></li>
+          <li><a href="#map">古树地图</a></li>
+          <li><a href="#restoration">古树修复</a></li>
+          <li><a href="#virtual">虚拟游览</a></li>
+          <li><a href="#hakka">客家文化</a></li>
+          <li><a href="#about">关于我们</a></li>
+        </ul>
+      </nav>
+      <div class="nav-account">
+        <span id="navUserBox" class="nav-user hidden"></span>
+        <button type="button" id="navMsgBtn" class="nav-account__btn"><i class="fas fa-comment"></i> 留言</button>
+        <button type="button" id="navLoginBtn" class="nav-account__btn nav-account__login">登录</button>
+        <a id="navAdminLink" class="nav-account__btn" href="/admin.html" target="_blank">后台</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ======================== Hero ======================== -->
+  <section class="hero" id="home" aria-labelledby="hero-title">
+    <div class="container">
+      <h1 id="hero-title">梅州客家古树名木的数字生态与人文记忆库</h1>
+      <p>探索客家古树的生命奇迹，了解客家民系与自然共生的智慧。我们致力于通过数字技术记录、保护和展示梅州地区古树名木及其蕴含的客家文化记忆。</p>
+      <a href="#explore" class="cta-button">开始探索</a>
+    </div>
+  </section>
+
+  <!-- ======================== 古树精选 ======================== -->
+  <section id="explore" aria-labelledby="explore-title">
+    <div class="container">
+      <h2 id="explore-title" class="section-title">古树精选</h2>
+
+      <!-- 分类工具栏 -->
+      <div class="taxonomy-toolbar">
+        <div class="view-toggle" role="tablist" aria-label="分类视图">
+          <button class="view-toggle-btn active" data-view="all" role="tab" aria-selected="true">全部</button>
+          <button class="view-toggle-btn" data-view="family" role="tab" aria-selected="false">按科分类</button>
+          <button class="view-toggle-btn" data-view="genus" role="tab" aria-selected="false">按属分类</button>
+        </div>
+        <div class="tree-search">
+          <i class="fas fa-search tree-search__icon" aria-hidden="true"></i>
+          <input
+            type="search"
+            id="treeSearchInput"
+            class="tree-search__input"
+            placeholder="搜索古树（名字 / 别名 / 拉丁名 / 科属 / 地点）"
+            aria-label="搜索古树"
+            autocomplete="off">
+          <button type="button" class="tree-search__clear" id="treeSearchClear" aria-label="清空搜索" hidden>×</button>
+        </div>
+        <div class="taxonomy-summary" id="taxonomySummary"></div>
+      </div>
+
+      <div id="treesContainer"></div>
+    </div>
+  </section>
+
+  <!-- ======================== 古树地图 ======================== -->
+  <section id="map" aria-labelledby="map-title">
+    <div class="container">
+      <h2 id="map-title" class="section-title">古树分布地图</h2>
+      <div class="map-controls">
+        <button class="map-type-btn active" id="satelliteMapBtn" data-type="satellite">卫星地图</button>
+        <button class="map-type-btn" id="fallbackMapBtn" data-type="amap">切换到高德地图（备选）</button>
+        <button class="map-type-btn" id="resetViewBtn" data-type="reset">重置视图</button>
+      </div>
+      <div class="tree-map-wrap">
+        <div id="tree-map"></div>
+        <!-- 古树小导游立绘（固定在地图左下角，装饰+暗示字幕由它"讲述"） -->
+        <div class="map-guide-figure" aria-hidden="true">
+          <img src="images/guide.png" alt="古树小导游" onerror="this.parentNode.style.display='none'">
+        </div>
+      </div>
+      <div class="map-info">
+        <div class="map-stats">
+          <div class="stat-item">
+            <span class="stat-number" id="treeCount">0</span>
+            <span class="stat-label">已收录古树</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number" id="speciesCount">0</span>
+            <span class="stat-label">古树种类</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number" id="oldestTree">0</span>
+            <span class="stat-label">最古老树龄</span>
+          </div>
+        </div>
+        <p>地图展示了古树的地理分布位置，点击标记可查看详细信息</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================== 古树修复 ======================== -->
+  <section id="restoration" aria-labelledby="restoration-title">
+    <div class="container">
+      <h2 id="restoration-title" class="section-title">古树修复</h2>
+      <p class="section-intro">根据《古树名木复壮技术规程》LY/T 2494-2015，古树名木复壮包括六项技术要求：围栏保护、生长环境改良、有害生物管理、树腔防腐填充修补、树体支撑稳固及枝条清理。</p>
+      <div class="restoration-methods" id="restorationMethods"></div>
+    </div>
+  </section>
+
+  <!-- ======================== 虚拟游览 ======================== -->
+  <section id="virtual" aria-labelledby="virtual-title">
+    <div class="container">
+      <h2 id="virtual-title" class="section-title">虚拟古树探索</h2>
+      <div class="split-layout">
+        <div class="split-layout__text">
+          <p>我们的虚拟探索功能让您足不出户即可体验古树的壮丽景象。通过360度全景视角、季节变化模拟和古树故事讲解，带您深入了解每一棵古树的历史与现状。</p>
+          <div class="feature-list">
+            <div class="feature-item">
+              <div class="feature-icon"><i class="fas fa-vr-cardboard"></i></div>
+              <div>
+                <h3>360°全景体验</h3>
+                <p>全方位查看古树及其周围环境，仿佛身临其境。</p>
+              </div>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon"><i class="fas fa-leaf"></i></div>
+              <div>
+                <h3>季节变化模拟</h3>
+                <p>查看古树在不同季节的样貌变化，感受时光流转。</p>
+              </div>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon"><i class="fas fa-history"></i></div>
+              <div>
+                <h3>历史故事讲解</h3>
+                <p>了解古树背后的历史传说和文化意义。</p>
+              </div>
+            </div>
+          </div>
+          <button class="cta-button" id="virtualTourBtn">开始虚拟游览</button>
+        </div>
+        <div class="split-layout__image">
+          <img src="https://images.pexels.com/photos/1624438/pexels-photo-1624438.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
+               alt="虚拟古树游览场景"
+               onerror="this.src=window.AppData.FALLBACK_IMAGE">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================== 客家文化 ======================== -->
+  <section id="hakka" aria-labelledby="hakka-title">
+    <div class="container">
+      <h2 id="hakka-title" class="section-title">客家文化 · 根与记忆</h2>
+      <div class="split-layout">
+        <div class="split-layout__text">
+          <h3 class="subsection-title">客家渊源</h3>
+          <p>客家是汉族中唯一一个不以地域命名的民系，其先民源自中原，因战乱、灾荒等原因，自西晋末年开始五次大迁徙，最终在闽、粤、赣边区形成稳定的客家族群。梅州是世界客都，是客家人最大的聚居中心，素有"客都"之称。客家先民将中原的先进文化与南方山地环境融合，创造了独特的客家文化，其中"风水林"和古树崇拜便是客家人与自然和谐相处的典范。</p>
+          <h3 class="subsection-title">历史故事 · 古树与围龙屋</h3>
+          <p>在客家村落，几乎每座围龙屋后都有一片"风水林"，其中不乏数百年甚至上千年的古树。传说围龙屋选址时，必先观察山势与林木，古树被视为"龙脉"所在。如梅县南口镇的"侨乡村"，村口两株500年榕树（"榕树公公"和"榕树婆婆"）守护着村庄，每逢节庆，村民都会在树下祭拜，祈求平安。古树见证了客家先民开基立业的历史，也承载着游子对故乡的深深眷恋。</p>
+          <h3 class="subsection-title">客家特色</h3>
+          <p>客家文化丰富多彩：围龙屋是客家建筑的瑰宝，体现了宗族聚居的伦理；客家山歌婉转深情，被列入国家级非遗；客家饮食如酿豆腐、盐焗鸡、梅菜扣肉等享誉海内外；客家人崇文重教，历史上涌现无数文人志士。古树作为村落的重要地标，常与这些文化元素紧密相连，树下是山歌对唱的舞台，是孩童听老人讲述祖先故事的课堂。</p>
+        </div>
+        <div class="split-layout__image">
+          <img src="https://images.pexels.com/photos/932638/pexels-photo-932638.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
+               alt="客家围龙屋实景"
+               onerror="this.src=window.AppData.FALLBACK_IMAGE">
+        </div>
+      </div>
+      <div class="hakka-features">
+        <div class="hakka-feature-item">
+          <div class="hakka-feature-icon"><i class="fas fa-home"></i></div>
+          <h4 class="hakka-feature-title">围龙屋</h4>
+          <p>客家传统民居，半圆形建筑，与后山风水林构成"背山面水"的理想格局。</p>
+        </div>
+        <div class="hakka-feature-item">
+          <div class="hakka-feature-icon"><i class="fas fa-music"></i></div>
+          <h4 class="hakka-feature-title">客家山歌</h4>
+          <p>国家级非遗，歌词即兴而作，古树下常有山歌对唱，传递劳动与爱情。</p>
+        </div>
+        <div class="hakka-feature-item">
+          <div class="hakka-feature-icon"><i class="fas fa-utensils"></i></div>
+          <h4 class="hakka-feature-title">客家美食</h4>
+          <p>酿豆腐、盐焗鸡、梅菜扣肉……古树下的宴席，承载着团圆的味道。</p>
+        </div>
+        <div class="hakka-feature-item">
+          <div class="hakka-feature-icon"><i class="fas fa-book-open"></i></div>
+          <h4 class="hakka-feature-title">崇文重教</h4>
+          <p>"耕读传家"，客家村落常以古树为伴建学堂，古树见证一代代读书人的成长。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================== 关于本库 ======================== -->
+  <section id="about" aria-labelledby="about-title">
+    <div class="container">
+      <h2 id="about-title" class="section-title">关于本库</h2>
+      <div class="split-layout">
+        <div class="split-layout__image">
+          <img src="https://images.pexels.com/photos/257360/pexels-photo-257360.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
+               alt="古树保护工作人员"
+               onerror="this.src=window.AppData.FALLBACK_IMAGE">
+        </div>
+        <div class="split-layout__text">
+          <p>梅州客家古树名木的数字生态与人文记忆库是一个致力于保护、研究和展示梅州地区古树名木及其客家文化内涵的数字化平台。我们通过数字技术记录古树的生长状态、历史故事和生态价值，同时挖掘古树背后的客家文化记忆，提高公众对古树保护和客家文化传承的意识。</p>
+          <p>我们的使命是：</p>
+          <ul class="mission-list">
+            <li>建立完整的梅州古树数字档案</li>
+            <li>推广古树保护与修复的科学知识</li>
+            <li>记录和传播客家文化与古树相关的记忆</li>
+            <li>连接古树爱好者、研究者和客家文化传承人</li>
+          </ul>
+          <p>目前，我们已经收录了百余株珍贵古树的详细信息，涵盖雅榕、榕树、尾叶紫薇、白桂木、木荷、樟树、木犀、柏木、枫香树、银杏、苏铁、重阳木等多种树种，这些古树分布于梅州各地，树龄在300-1100年之间，是客家地区宝贵的自然与文化遗产。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================== 页脚 ======================== -->
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3>梅州客家古树名木库</h3>
+          <p>探索千年古树，感受客家记忆。我们致力于通过数字技术保护和展示古树及其人文内涵。</p>
+          <div class="social-icons">
+            <a href="#" aria-label="微信"><i class="fab fa-weixin"></i></a>
+            <a href="#" aria-label="微博"><i class="fab fa-weibo"></i></a>
+            <a href="#" aria-label="QQ"><i class="fab fa-qq"></i></a>
+            <a href="#" aria-label="GitHub"><i class="fab fa-github"></i></a>
+          </div>
+        </div>
+        <div class="footer-section">
+          <h3>快速链接</h3>
+          <ul class="footer-links">
+            <li><a href="#home">首页</a></li>
+            <li><a href="#explore">古树探索</a></li>
+            <li><a href="#map">古树地图</a></li>
+            <li><a href="#restoration">古树修复</a></li>
+            <li><a href="#virtual">虚拟游览</a></li>
+            <li><a href="#hakka">客家文化</a></li>
+            <li><a href="#about">关于我们</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h3>联系我们</h3>
+          <ul class="footer-links">
+            <li><i class="fas fa-map-marker-alt"></i> 嘉应学院生命科学学院</li>
+            <li><i class="fas fa-phone"></i> 13822566783</li>
+            <li><i class="fas fa-envelope"></i> 13822566783@163.com</li>
+            <li><i class="fas fa-clock"></i> 周一至周五 9:00-18:00</li>
+          </ul>
+        </div>
+      </div>
+      <div class="copyright">
+        <p>&copy; 2025 梅州客家古树名木的数字生态与人文记忆库 | 保留所有权利</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ======================== 结构化数据 ======================== -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "梅州客家古树名木的数字生态与人文记忆库",
+    "description": "收录梅州地区古树名木的详细信息，包括树种、树龄、地理位置、保护措施以及客家文化关联故事。",
+    "keywords": "古树, 客家文化, 梅州, 生态保护",
+    "creator": { "@type": "Organization", "name": "嘉应学院生命科学学院" },
+    "spatialCoverage": "广东梅州",
+    "temporalCoverage": "2025"
+  }
+  </script>
+
+  <!-- ======================== 脚本 ======================== -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/data.js"></script>
+
+  
+  <script src="js/app.js"></script>
+</body>
+</html>
